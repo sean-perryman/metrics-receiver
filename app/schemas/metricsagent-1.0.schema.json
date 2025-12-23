@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/metricsagent-1.0.schema.json",
+  "title": "MetricsAgent Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": ["schema_version", "timestamp_utc", "interval_seconds", "host"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "interval_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 86400
+    },
+
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostname", "machine_id"],
+      "properties": {
+        "hostname": { "type": "string", "minLength": 1 },
+        "machine_id": { "type": "string", "minLength": 1 },
+
+        "os": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["platform"],
+          "properties": {
+            "platform": { "type": "string", "enum": ["windows"] },
+            "version": { "type": "string" },
+            "build": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "cpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["utilization_pct", "idle_pct"],
+      "properties": {
+        "utilization_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "idle_pct": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total_bytes", "used_bytes", "free_bytes", "used_pct"],
+      "properties": {
+        "total_bytes": { "type": "integer", "minimum": 0 },
+        "used_bytes": { "type": "integer", "minimum": 0 },
+        "free_bytes": { "type": "integer", "minimum": 0 },
+        "used_pct": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+
+    "disk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["physical", "volumes"],
+      "properties": {
+        "physical": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "instance",
+              "reads_per_sec",
+              "writes_per_sec",
+              "avg_queue_length",
+              "read_latency_ms",
+              "write_latency_ms",
+              "utilization_pct"
+            ],
+            "properties": {
+              "instance": { "type": "string", "minLength": 1 },
+              "reads_per_sec": { "type": "number", "minimum": 0 },
+              "writes_per_sec": { "type": "number", "minimum": 0 },
+              "avg_queue_length": { "type": "number", "minimum": 0 },
+              "read_latency_ms": { "type": "number", "minimum": 0 },
+              "write_latency_ms": { "type": "number", "minimum": 0 },
+              "utilization_pct": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        },
+
+        "volumes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mount", "total_bytes", "free_bytes", "free_pct"],
+            "properties": {
+              "mount": { "type": "string", "minLength": 2 },
+              "filesystem": { "type": "string" },
+              "total_bytes": { "type": "integer", "minimum": 0 },
+              "free_bytes": { "type": "integer", "minimum": 0 },
+              "free_pct": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        }
+      }
+    },
+
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interfaces"],
+      "properties": {
+        "interfaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "bytes_total_per_sec",
+              "bits_total_per_sec",
+              "utilization_pct",
+              "packets_in_errors",
+              "packets_out_errors"
+            ],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "bytes_total_per_sec": { "type": "number", "minimum": 0 },
+              "bits_total_per_sec": { "type": "number", "minimum": 0 },
+
+              "utilization_pct": {
+                "anyOf": [
+                  { "type": "number", "minimum": 0, "maximum": 100 },
+                  { "type": "null" }
+                ]
+              },
+
+              "packets_in_errors": { "type": "integer", "minimum": 0 },
+              "packets_out_errors": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+
+    "users": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logged_in", "count"],
+      "properties": {
+        "logged_in": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["username", "session_type"],
+            "properties": {
+              "username": { "type": "string", "minLength": 1 },
+              "session_type": { "type": "string" }
+            }
+          }
+        },
+        "count": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

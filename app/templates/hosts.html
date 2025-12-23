@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold">Hosts</h1>
+    <form class="flex gap-2" method="get">
+      <input class="border rounded px-3 py-2" name="q" value="{{ q }}" placeholder="filter by hostname or machine_id" />
+      <button class="px-4 py-2 rounded bg-indigo-600 text-white">Filter</button>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="text-slate-600">
+        <tr>
+          <th class="text-left py-3 px-4">Hostname</th>
+          <th class="text-left py-3 px-4">Machine ID</th>
+          <th class="text-left py-3 px-4">Last Seen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ep in endpoints %}
+          <tr class="border-t hover:bg-slate-50">
+            <td class="py-3 px-4"><a class="text-indigo-600 hover:underline" href="/hosts/{{ ep.id }}">{{ ep.hostname }}</a></td>
+            <td class="py-3 px-4 font-mono text-xs">{{ ep.machine_id }}</td>
+            <td class="py-3 px-4 text-slate-600">{{ ep.last_seen if ep.last_seen else "—" }}</td>
+          </tr>
+        {% else %}
+          <tr class="border-t"><td class="py-4 px-4 text-slate-500" colspan="3">No hosts found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

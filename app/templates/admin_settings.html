@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold">Admin · Settings</h1>
+    <a class="text-sm text-indigo-600 hover:underline" href="/admin/endpoints">&larr; Endpoints</a>
+  </div>
+
+  {% if error %}
+    <div class="mb-4 p-3 rounded bg-rose-50 border border-rose-200 text-rose-700">{{ error }}</div>
+  {% endif %}
+
+  <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="font-semibold mb-2">Global settings JSON</div>
+    <div class="text-sm text-slate-600 mb-3">Shallow-merged over defaults. Keys you omit will use defaults.</div>
+
+    <form method="post">
+      <textarea class="w-full h-80 font-mono text-xs border rounded p-3" name="cfg_json">{{ cfg }}</textarea>
+      <div class="mt-3 flex items-center justify-between">
+        <div class="text-xs text-slate-500">Examples: enable email/webhook/Discord, adjust low disk threshold, heartbeat grace &amp; dedup.</div>
+        <button class="px-4 py-2 rounded bg-indigo-600 text-white">Save</button>
+      </div>
+    </form>
+
+    <div class="mt-6 text-xs text-slate-500">
+<pre class="whitespace-pre-wrap">{
+  "alerts": {
+    "enabled": true,
+    "dedup_minutes": 15,
+    "low_disk_free_pct_threshold": 10.0,
+    "heartbeat_grace_multiplier": 3,
+    "heartbeat_min_grace_seconds": 120,
+    "notify": {
+      "email": {"enabled": false, "to": ["you@example.com"]},
+      "webhook": {"enabled": false, "url": "https://example.com/hook"},
+      "discord": {"enabled": false, "webhook_url": "https://discord.com/api/webhooks/..."}
+    }
+  }
+}</pre>
+    </div>
+  </div>
+{% endblock %}

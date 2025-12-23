@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold">Dashboard</h1>
+    <div class="text-sm text-slate-600">Fleet overview, top offenders, and low-disk table.</div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Top CPU (latest)</div>
+      <ol class="space-y-1">
+        {% for ep, snap in top_cpu %}
+          <li class="flex justify-between text-sm">
+            <a class="text-indigo-600 hover:underline" href="/hosts/{{ ep.id }}">{{ ep.hostname }}</a>
+            <span>{{ "%.1f"|format(snap.cpu_utilization_pct) }}%</span>
+          </li>
+        {% else %}
+          <li class="text-sm text-slate-500">No data yet.</li>
+        {% endfor %}
+      </ol>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Top Memory Used (latest)</div>
+      <ol class="space-y-1">
+        {% for ep, snap in top_mem %}
+          <li class="flex justify-between text-sm">
+            <a class="text-indigo-600 hover:underline" href="/hosts/{{ ep.id }}">{{ ep.hostname }}</a>
+            <span>{{ "%.1f"|format(snap.mem_used_pct) }}%</span>
+          </li>
+        {% else %}
+          <li class="text-sm text-slate-500">No data yet.</li>
+        {% endfor %}
+      </ol>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Quick Search</div>
+      <form class="flex gap-2" method="get" action="/search">
+        <input class="flex-1 border rounded px-3 py-2" name="q" placeholder="hostname | machine_id | username" />
+        <button class="px-4 py-2 rounded bg-indigo-600 text-white">Search</button>
+      </form>
+      <div class="text-xs text-slate-500 mt-2">Searches endpoints + recently seen usernames.</div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-semibold">Low Disk Space (free_pct &lt; {{ low_disk_threshold }}%)</div>
+      <a class="text-sm text-indigo-600 hover:underline" href="/admin/settings">Adjust threshold</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="text-slate-600">
+          <tr>
+            <th class="text-left py-2">Host</th>
+            <th class="text-left py-2">Mount</th>
+            <th class="text-right py-2">Free %</th>
+            <th class="text-right py-2">Free</th>
+            <th class="text-right py-2">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for r in low_disk_rows %}
+          <tr class="border-t">
+            <td class="py-2">
+              <span class="font-medium">{{ r[0] }}</span>
+              <div class="text-xs text-slate-500">{{ r[1] }}</div>
+            </td>
+            <td class="py-2">{{ r[2] }}</td>
+            <td class="py-2 text-right font-semibold text-rose-700">{{ "%.1f"|format(r[3]) }}</td>
+            <td class="py-2 text-right">{{ (r[4] / (1024**3))|round(2) }} GiB</td>
+            <td class="py-2 text-right">{{ (r[5] / (1024**3))|round(2) }} GiB</td>
+          </tr>
+        {% else %}
+          <tr class="border-t"><td class="py-3 text-slate-500" colspan="5">No volumes below threshold.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="font-semibold mb-3">All Hosts</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {% for h in host_cards %}
+        <a href="/hosts/{{ h.endpoint_id }}" class="block rounded-lg border border-slate-200 hover:border-indigo-300 p-3 bg-slate-50">
+          <div class="flex items-center justify-between">
+            <div class="font-semibold">{{ h.hostname }}</div>
+            {% if h.seconds_ago is not none %}
+              <div class="text-xs px-2 py-1 rounded bg-white border">{{ h.seconds_ago }}s ago</div>
+            {% else %}
+              <div class="text-xs px-2 py-1 rounded bg-white border">never</div>
+            {% endif %}
+          </div>
+          <div class="text-xs text-slate-600 mt-1">{{ h.machine_id }}</div>
+          <div class="mt-2 flex gap-3 text-sm">
+            <div>CPU: <span class="font-medium">{{ "%.1f"|format(h.cpu) if h.cpu is not none else "—" }}%</span></div>
+            <div>MEM: <span class="font-medium">{{ "%.1f"|format(h.mem) if h.mem is not none else "—" }}%</span></div>
+          </div>
+        </a>
+      {% else %}
+        <div class="text-slate-500">No endpoints yet. Create one in Admin → Endpoints.</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

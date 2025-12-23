@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="text-2xl font-semibold mb-4">Search</h1>
+  <form class="flex gap-2 mb-6" method="get">
+    <input class="flex-1 border rounded px-3 py-2" name="q" value="{{ q }}" placeholder="hostname | machine_id | username" />
+    <button class="px-4 py-2 rounded bg-indigo-600 text-white">Search</button>
+  </form>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Endpoints</div>
+      <ul class="space-y-2">
+        {% for ep in endpoints %}
+          <li class="border rounded p-2 bg-slate-50">
+            <a class="text-indigo-600 hover:underline font-medium" href="/hosts/{{ ep.id }}">{{ ep.hostname }}</a>
+            <div class="text-xs text-slate-600">{{ ep.machine_id }}</div>
+          </li>
+        {% else %}
+          <li class="text-sm text-slate-500">No endpoints matched.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Usernames seen in snapshots</div>
+      <ul class="space-y-2">
+        {% for u in user_hits %}
+          <li class="border rounded p-2 bg-slate-50">
+            <div class="font-medium">{{ u[0] }}</div>
+            <div class="text-xs text-slate-600">Endpoint ID: {{ u[1] }}</div>
+          </li>
+        {% else %}
+          <li class="text-sm text-slate-500">No usernames matched.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endblock %}

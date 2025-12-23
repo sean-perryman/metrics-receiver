@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title if title else "Metrics Receiver" }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <nav class="bg-slate-900 text-white">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a class="font-semibold" href="/dashboard">Metrics Receiver</a>
+        <a class="text-slate-300 hover:text-white" href="/hosts">Hosts</a>
+        <a class="text-slate-300 hover:text-white" href="/search?q=">Search</a>
+        {% if user and user.role == 'admin' %}
+          <a class="text-slate-300 hover:text-white" href="/admin/endpoints">Admin</a>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-3">
+        {% if user %}
+          <span class="text-slate-300 text-sm">{{ user.email }} ({{ user.role }})</span>
+          <form method="post" action="/logout">
+            <button class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm" type="submit">Logout</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="max-w-7xl mx-auto px-4 pb-8 text-xs text-slate-500">
+    <div>Receiver stores JSON snapshots, renders dashboards, and provides alerting + RBAC.</div>
+  </footer>
+</body>
+</html>

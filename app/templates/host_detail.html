@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-semibold">{{ endpoint.hostname }}</h1>
+      <div class="text-sm text-slate-600">Machine ID: {{ endpoint.machine_id }}</div>
+      <div class="text-sm text-slate-600">Last seen: {{ endpoint.last_seen if endpoint.last_seen else "never" }}</div>
+      <div class="text-xs text-slate-500">Snapshots (last 24h): {{ count_24h }}</div>
+    </div>
+    <a href="/hosts" class="text-sm text-indigo-600 hover:underline">&larr; Back</a>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">CPU Utilization</div>
+      <canvas id="chart_cpu" height="120"></canvas>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Memory Used %</div>
+      <canvas id="chart_mem" height="120"></canvas>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Disk Queue Length (per physical)</div>
+      <canvas id="chart_disk_queue" height="120"></canvas>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Disk Latency (read/write ms)</div>
+      <canvas id="chart_disk_lat" height="120"></canvas>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">Per-Volume Free %</div>
+      <canvas id="chart_vol_free" height="120"></canvas>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <div class="font-semibold mb-2">NIC Throughput (bps)</div>
+      <canvas id="chart_nic_bps" height="120"></canvas>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4 xl:col-span-2">
+      <div class="font-semibold mb-2">NIC Errors (in/out)</div>
+      <canvas id="chart_nic_err" height="90"></canvas>
+    </div>
+  </div>
+
+<script>
+async function loadSeries(metric) {
+  const res = await fetch(`/api/ui/host/{{ endpoint.id }}/timeseries?metric=${encodeURIComponent(metric)}`);
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+function renderChart(canvasId, payload) {
+  const ctx = document.getElementById(canvasId);
+  const datasets = payload.series.map(s => ({
+    label: s.name,
+    data: s.data,
+    tension: 0.2,
+    pointRadius: 0,
+  }));
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels: payload.labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: { x: { display: false } }
+    }
+  });
+}
+
+(async () => {
+  renderChart('chart_cpu', await loadSeries('cpu'));
+  renderChart('chart_mem', await loadSeries('mem'));
+  renderChart('chart_disk_queue', await loadSeries('disk_queue'));
+  renderChart('chart_disk_lat', await loadSeries('disk_read_lat'));
+  // overlay write latency on same canvas by fetching and merging
+  const readLat = await loadSeries('disk_read_lat');
+  const writeLat = await loadSeries('disk_write_lat');
+  renderChart('chart_disk_lat', { labels: readLat.labels, series: [...readLat.series, ...writeLat.series] });
+  renderChart('chart_vol_free', await loadSeries('vol_free'));
+  renderChart('chart_nic_bps', await loadSeries('nic_bps'));
+  renderChart('chart_nic_err', await loadSeries('nic_err'));
+})().catch(err => console.error(err));
+</script>
+{% endblock %}
