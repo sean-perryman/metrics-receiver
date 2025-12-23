@@ -1,39 +1,45 @@
 services:
   db:
     image: postgres:16
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: metrics
-      POSTGRES_USER: metrics
-      POSTGRES_PASSWORD: metrics
+      # These default to sensible values if not set in .env
+      POSTGRES_DB: ${POSTGRES_DB:-metrics}
+      POSTGRES_USER: ${POSTGRES_USER:-metrics}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-metrics}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U metrics -d metrics"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-metrics} -d $${POSTGRES_DB:-metrics}"]
       interval: 5s
       timeout: 5s
       retries: 20
 
   app:
     build: .
-    environment:
-      DATABASE_URL: postgresql+asyncpg://metrics:metrics@db:5432/metrics
-      SECRET_KEY: CHANGEME_SUPERSECRET
-      ENVIRONMENT: production
-      BOOTSTRAP_ADMIN_EMAIL: admin@example.com
-      BOOTSTRAP_ADMIN_PASSWORD: admin123!
-      # Optional SMTP for email alerting
-      SMTP_HOST: ""
-      SMTP_PORT: 587
-      SMTP_USER: ""
-      SMTP_PASSWORD: ""
-      SMTP_FROM: ""
-      SCHEDULER_ENABLED: "true"
-      SCHEDULER_INTERVAL_SECONDS: 30
-    ports:
-      - "8000:8000"
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Critical fix for your error:
+      PYTHONPATH: /app
+
+      # If you prefer, you can also define DATABASE_URL in .env; this keeps a safe default.
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://metrics:metrics@db:5432/metrics}
+
+      # App binds
+      HOST: 0.0.0.0
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    command: >
+      bash -lc "alembic upgrade head
+      && uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
 volumes:
   postgres_data:
