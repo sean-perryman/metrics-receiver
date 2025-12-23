@@ -1,7 +1,19 @@
+"""Password + token hashing helpers.
+
+We intentionally use PBKDF2-SHA256 instead of bcrypt.
+
+Why:
+- bcrypt has a hard 72-byte password limit.
+- passlib's bcrypt integration frequently breaks when the upstream `bcrypt`
+  package changes its internals.
+
+PBKDF2-SHA256 avoids both issues and is widely supported.
+"""
+
 import secrets
 from passlib.context import CryptContext
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
@@ -17,7 +29,7 @@ def generate_token(nbytes: int = 32) -> str:
 
 
 def hash_token(token: str) -> str:
-    # Use bcrypt so we never store tokens in plaintext.
+    # Never store tokens in plaintext.
     return pwd_context.hash(token)
 
 

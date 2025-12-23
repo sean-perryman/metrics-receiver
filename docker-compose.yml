@@ -5,14 +5,13 @@ services:
     env_file:
       - .env
     environment:
-      # These default to sensible values if not set in .env
       POSTGRES_DB: ${POSTGRES_DB:-metrics}
       POSTGRES_USER: ${POSTGRES_USER:-metrics}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-metrics}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-metrics} -d $${POSTGRES_DB:-metrics}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-metrics} -d ${POSTGRES_DB:-metrics}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -20,26 +19,13 @@ services:
   app:
     build: .
     restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${APP_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      # Critical fix for your error:
-      PYTHONPATH: /app
-
-      # If you prefer, you can also define DATABASE_URL in .env; this keeps a safe default.
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://metrics:metrics@db:5432/metrics}
-
-      # App binds
-      HOST: 0.0.0.0
-      PORT: 8000
-    ports:
-      - "8000:8000"
-    command: >
-      bash -lc "alembic upgrade head
-      && uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
 volumes:
   postgres_data:
