@@ -3,6 +3,14 @@ from __future__ import annotations
 import asyncio
 from logging.config import fileConfig
 
+import os
+import sys
+
+# Ensure project root is on sys.path when Alembic runs inside containers
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
