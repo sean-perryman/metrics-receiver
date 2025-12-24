@@ -17,22 +17,15 @@ services:
       retries: 20
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     restart: unless-stopped
     env_file:
       - .env
-    environment:
-      PYTHONPATH: /app
     ports:
       - "${APP_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      bash -lc "alembic upgrade head &&
-      uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
 volumes:
   postgres_data:

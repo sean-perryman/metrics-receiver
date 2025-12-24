@@ -11,13 +11,14 @@ router = APIRouter()
 
 @router.post("/v1/ingest")
 async def ingest(request: Request, db: AsyncSession = Depends(get_db)):
-    auth = request.headers.get("authorization") or ""
-    token = ""
-    if auth.lower().startswith("bearer "):
-        token = auth.split(" ", 1)[1].strip()
+        # Accept either X-API-Key header (recommended for agents) or Authorization: Bearer <token>
+    token = (request.headers.get("x-api-key") or "").strip()
     if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
-
+        auth = request.headers.get("authorization") or ""
+        if auth.lower().startswith("bearer "):
+            token = auth.split(" ", 1)[1].strip()
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing API token")
     endpoint = await get_endpoint_by_token(db, token)
     if not endpoint:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")

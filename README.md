@@ -51,7 +51,7 @@ Example:
 
 ```bash
 curl -X POST "https://receiver.example.com/api/v1/ingest" \
-  -H "Authorization: Bearer <TOKEN>" \
+  -H "X-API-Key: <TOKEN> (or Authorization: Bearer <TOKEN>)" \
   -H "Content-Type: application/json" \
   -d @sample.json
 ```

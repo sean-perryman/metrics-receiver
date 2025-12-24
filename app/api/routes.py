@@ -246,7 +246,9 @@ async def global_search(request: Request, q: str, db: AsyncSession = Depends(get
 @router.get("/admin/endpoints")
 async def admin_endpoints(request: Request, db: AsyncSession = Depends(get_db), user: User = Depends(require_admin)):
     eps = (await db.execute(select(Endpoint).order_by(Endpoint.created_at.desc()))).scalars().all()
-    return templates.TemplateResponse("admin_endpoints.html", {"request": request, "user": user, "endpoints": eps})
+    # show newly created token exactly once
+    new_token = request.session.pop("new_endpoint_token", None)
+    return templates.TemplateResponse("admin_endpoints.html", {"request": request, "user": user, "endpoints": eps, "new_token": new_token})
 
 
 @router.post("/admin/endpoints/new")
